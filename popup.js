@@ -13,7 +13,35 @@ const pauseBtn = document.getElementById('pause-btn');
 const resetBtn = document.getElementById('reset-btn');
 const wpmSlider = document.getElementById('wpm');
 const wpmValue = document.getElementById('wpm-value');
+const useChunking = document.getElementById('use-chunking');
 const status = document.getElementById('status');
+
+// Browser API (works for both Firefox and Chrome)
+const storage = (typeof browser !== 'undefined' ? browser : chrome).storage.local;
+
+// Load saved settings
+async function loadSettings() {
+  try {
+    const data = await storage.get(['wpm', 'chunking']);
+    if (data.wpm) {
+      wpmSlider.value = data.wpm;
+      wpmValue.textContent = data.wpm;
+    }
+    if (data.chunking !== undefined) {
+      useChunking.checked = data.chunking;
+    }
+  } catch (e) {
+    console.error('Failed to load settings:', e);
+  }
+}
+
+// Save settings
+function saveSettings() {
+  storage.set({
+    wpm: parseInt(wpmSlider.value),
+    chunking: useChunking.checked
+  });
+}
 
 // Get selected text from the active tab
 async function getSelectedText() {
@@ -161,9 +189,14 @@ async function start() {
     }
 
     const rawWords = tokenize(text);
-    words = chunkWords(rawWords);
+    if (useChunking.checked) {
+      words = chunkWords(rawWords);
+      status.textContent = `Loaded ${rawWords.length} words (${words.length} chunks)`;
+    } else {
+      words = rawWords;
+      status.textContent = `Loaded ${words.length} words`;
+    }
     currentIndex = 0;
-    status.textContent = `Loaded ${rawWords.length} words (${words.length} chunks)`;
   }
 
   isPlaying = true;
@@ -197,7 +230,11 @@ resetBtn.addEventListener('click', reset);
 
 wpmSlider.addEventListener('input', () => {
   wpmValue.textContent = wpmSlider.value;
+  saveSettings();
 });
 
+useChunking.addEventListener('change', saveSettings);
+
 // Initialize
+loadSettings();
 updateDisplay();

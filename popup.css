@@ -106,6 +106,18 @@ body {
   accent-color: #e94560;
 }
 
+.options {
+  font-size: 13px;
+  color: #aaa;
+}
+
+.options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
 .source-info {
   text-align: center;
   color: #666;
